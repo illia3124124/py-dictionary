@@ -6,15 +6,17 @@ class Dictionary:
     def __init__(self) -> None:
         self.hash_table = [None] * 8
         self.length = 8
+        self.capacity = 0
 
     def pop(self, key: Any) -> Any:
         index = hash(key) % self.length
         for i in range(self.length):
             s_index = (index + i) % self.length
             if self.hash_table[s_index] is None:
-                raise KeyError("Key not found")
+                raise KeyError(f"Key not found: {key}")
             elif (self.hash_table[s_index][1] == hash(key)
                   and self.hash_table[s_index][0] == key):
+                self.capacity -= 1
                 value = self.hash_table[s_index][2]
                 self.hash_table[s_index] = None
                 self._recreate()
@@ -34,18 +36,19 @@ class Dictionary:
                     self.hash_table[s_index][2] = value
                     break
 
-    def get(self, key: Any) -> Any:
+    def get(self, key: Any, default: Any = None) -> Any:
         index = hash(key) % self.length
         for i in range(self.length):
             s_index = (index + i) % self.length
             if self.hash_table[s_index] is None:
-                raise KeyError("Key not found")
+                return default
             elif self.hash_table[s_index][0] == key:
                 return self.hash_table[s_index][2]
-        raise KeyError("Key not found")
+        return default
 
     def clear(self) -> None:
         self.hash_table = [None] * 8
+        self.capacity = 0
         self.length = 8
 
     def _resize(self) -> None:
@@ -65,13 +68,13 @@ class Dictionary:
                         break
 
     def __setitem__(self, key: Any, value: Any) -> None:
-        if ((self.length - self.hash_table.count(None))
-                / self.length >= (2 / 3)):
+        if self.capacity / self.length >= (2 / 3):
             self._resize()
         index = hash(key) % self.length
         for i in range(self.length):
             s_index = (index + i) % self.length
             if self.hash_table[s_index] is None:
+                self.capacity += 1
                 self.hash_table[s_index] = [key, hash(key), value]
                 break
             elif (self.hash_table[s_index][1] == hash(key)
@@ -90,7 +93,7 @@ class Dictionary:
         raise KeyError("Key not found")
 
     def __len__(self) -> int:
-        return self.length - self.hash_table.count(None)
+        return self.capacity
 
     def __delitem__(self, key: Any) -> None:
         index = hash(key) % self.length
@@ -100,6 +103,7 @@ class Dictionary:
                 return
             elif (self.hash_table[s_index][1] == hash(key)
                   and self.hash_table[s_index][0] == key):
+                self.capacity -= 1
                 self.hash_table[s_index] = None
                 self._recreate()
                 break
@@ -116,4 +120,4 @@ class Dictionary:
             self._counter += 1
             if self._counter >= self.length:
                 raise StopIteration
-        return self.hash_table[self._counter][2]
+        return self.hash_table[self._counter][0]
