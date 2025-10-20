@@ -8,11 +8,13 @@ class Dictionary:
         self.length = 8
         self.capacity = 0
 
-    def pop(self, key: Any) -> Any:
+    def pop(self, key: Any, default: Any = None) -> Any:
         index = hash(key) % self.length
         for i in range(self.length):
             s_index = (index + i) % self.length
             if self.hash_table[s_index] is None:
+                if default is not None:
+                    return default
                 raise KeyError(f"Key not found: {key}")
             elif (self.hash_table[s_index][1] == hash(key)
                   and self.hash_table[s_index][0] == key):
@@ -21,14 +23,16 @@ class Dictionary:
                 self.hash_table[s_index] = None
                 self._recreate()
                 return value
-        return None
 
     def update(self, updated_dict: dict) -> None:
         for key, value in updated_dict.items():
+            if self.capacity / self.length >= (2 / 3):
+                self._resize()
             index = hash(key) % self.length
             for i in range(self.length):
                 s_index = (index + i) % self.length
                 if self.hash_table[s_index] is None:
+                    self.capacity += 1
                     self.hash_table[s_index] = [key, hash(key), value]
                     break
                 elif (self.hash_table[s_index][1] == hash(key)
@@ -87,10 +91,10 @@ class Dictionary:
         for i in range(self.length):
             s_index = (index + i) % self.length
             if self.hash_table[s_index] is None:
-                raise KeyError("Key not found")
+                raise KeyError(f"Key not found: {key}")
             elif self.hash_table[s_index][0] == key:
                 return self.hash_table[s_index][2]
-        raise KeyError("Key not found")
+        raise KeyError(f"Key not found: {key}")
 
     def __len__(self) -> int:
         return self.capacity
@@ -100,7 +104,7 @@ class Dictionary:
         for i in range(self.length):
             s_index = (index + i) % self.length
             if self.hash_table[s_index] is None:
-                return
+                raise KeyError(f"Key not found: {key}")
             elif (self.hash_table[s_index][1] == hash(key)
                   and self.hash_table[s_index][0] == key):
                 self.capacity -= 1
